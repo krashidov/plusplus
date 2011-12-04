@@ -52,13 +52,14 @@ public class PDbAdapter
 	public PDbAdapter(Context cx)
 	{
 		this.mContext = cx;
+		mDbHelper = new DatabaseHelper(mContext);
 		
 	}
 	
 	public PDbAdapter open() throws SQLException 
 	{
-		mDbHelper = new DatabaseHelper(mContext);
-		mDb = mDbHelper.getReadableDatabase();
+		
+		mDb = mDbHelper.getWritableDatabase();
 		return this;
 	}
 	
@@ -67,16 +68,23 @@ public class PDbAdapter
 		mDbHelper.close();
 	}
 	
-	public long createQuantity(String date)
+	public long insertQuantity(long date, int quantity) throws SQLException
 	{
 		ContentValues initialValues = new ContentValues();
 		initialValues.put(KEY_DATE, date);
-		initialValues.put(KEY_NUMBER, 0);
+		initialValues.put(KEY_NUMBER, quantity);
 		
 		return mDb.insert(DATABASE_TABLE, null, initialValues);
 		
 	}
 	
+	
+    public Cursor fetchAllNotes() {
+
+        return mDb.query(DATABASE_TABLE, new String[] {KEY_ROWID, KEY_DATE,
+                KEY_NUMBER}, null, null, null, null, null);
+    }
+	/*
 	public Cursor fetchNumbers(long rowId) throws SQLException 
 	{
 		Cursor mCursor =
@@ -93,33 +101,47 @@ public class PDbAdapter
 		return mCursor;
 	}
 	
-	private Cursor getLastRowidCursor()
+	/*private Cursor getLastRowidCursor()
 	{
 		return
 				mDb.query(true, DATABASE_TABLE, new String[]{KEY_ROWID, KEY_DATE, KEY_NUMBER}, "SELECT last_insert_rowid();", null, null, null, null, null);
-	}
+	}*/
 	
 	public long getLastDate()
 	{	
-		Cursor c = getLastRowidCursor();
-		Cursor dateCursor = this.fetchNumbers(c.getInt(0));
-		
-		return dateCursor.getLong(0);
+		Cursor c = fetchAllNotes();
+		if(c.moveToLast())
+		{
+			return c.getLong(c.getColumnIndex(KEY_DATE));
+		}
+		else
+		{
+			return 0;
+		}
+
 		
 	}
-	
-	public boolean updateNumbers()
+
+	public boolean plusPlus() throws SQLException
 	{
-		Cursor c =  getLastRowidCursor();
-		return true;
 		
-		/*
-		quant++;
+
+		Cursor c =  fetchAllNotes();
 		ContentValues args = new ContentValues();
-		args.put(KEY_DATE, date);
-		args.put(KEY_NUMBER, quant);
+		int rowId = 0;
+		if(c.moveToLast())
+		{
+			rowId = c.getInt(c.getColumnIndex(KEY_ROWID));
+			int tempQ =c.getInt(c.getColumnIndex(KEY_NUMBER));
+			tempQ++;
+			args.put(KEY_NUMBER, tempQ);
+		}
+		else
+		{
+			insertQuantity(System.currentTimeMillis(), 1);
+		}
 		
-		return mDb.update(DATABASE_TABLE, args, KEY_ROWID + "=" + rowId, null) > 0;*/
+		return mDb.update(DATABASE_TABLE, args, KEY_ROWID + "=" + rowId, null) > 0;
 	}
 	
 }

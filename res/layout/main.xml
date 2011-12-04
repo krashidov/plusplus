@@ -8,5 +8,9 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="@string/hello" />
+        
+    <Button android:id="@+id/trigger"
+    	android:layout_width="100dip" android:layout_height="100dip"
+    	android:text = " Plus Plus" />
 
 </LinearLayout>
